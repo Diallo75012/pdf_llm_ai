@@ -54,3 +54,44 @@ daemon = True
 # create the directories for gunicorn files
 sudo mkdir -pv /var/{log,run}/gunicorn/
 
+
+#### Get 3D representation of PGVector Collections Embeddings data points
+# Extract Data from PostgreSQL
+import pandas as pd
+import sqlalchemy
+
+# Establish a connection to your PostgreSQL database
+engine = sqlalchemy.create_engine('postgresql://username:password@host:port/database')
+
+# Query to fetch data from your tables
+query = """
+SELECT collections.name, embeddings.x, embeddings.y, embeddings.z
+FROM embeddings
+JOIN collections ON embeddings.collection_id = collections.id
+"""
+
+# Load the query results into a Pandas DataFrame
+df = pd.read_sql_query(query, engine)
+
+# 3D visualization using matplotlib
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+# Create a 3D plot
+fig = plt.figure(figsize=(10, 7))
+ax = fig.add_subplot(111, projection='3d')
+
+# Scatter plot using the embedding coordinates
+ax.scatter(df['x'], df['y'], df['z'])
+
+# Labeling the axes
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+
+# Optional: To label each point with the name of its collection
+for i, txt in enumerate(df['name']):
+    ax.text(df['x'][i], df['y'][i], df['z'][i], txt, size=5)
+
+plt.show()
+

@@ -23,4 +23,8 @@ nginx-*
 *.key
 *.cert
 *.crt
+# Gradio folder
+flagged/*
+flagged/
+
 

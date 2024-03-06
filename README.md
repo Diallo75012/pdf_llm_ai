@@ -4,7 +4,7 @@
 ```<your_server_ip> <domain_name>```
 
 # set up ssl for https (self signed certificate)
-openssl req -x509 -nodes -days 367 -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt -subj "/C=US/ST=State/L=City/O=Organization/CN=<domain_name>"
+sudo openssl req -x509 -nodes -days 367 -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt -subj "/C=US/ST=State/L=City/O=Organization/CN=<domain_name>"
 
 # can also run the cron job to rotate keys every year
 
