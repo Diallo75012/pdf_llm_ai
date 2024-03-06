@@ -1,0 +1,28 @@
+upstream simple_academy_server {
+  server unix:/opt/simple_academy/run/gunicorn.sock fail_timeout=0;
+}
+
+# to not display nginx server version in headers
+server_tokens             off;
+
+server {
+    listen 443 ssl;
+    server_name creditizens.local;
+    ssl_certificate /path/to/your/cert.pem;
+    ssl_certificate_key /path/to/your/key.pem;
+
+    location = /validate_session {
+        proxy_pass http://localhost:8000; # Assuming Django runs on 8000
+        proxy_set_header Host $host;
+    }
+
+    location /streamlit {
+        auth_request /validate_session;
+        proxy_pass http://localhost:8501; # Streamlit port
+        error_page 401 = @error401;
+    }
+
+    location @error401 {
+        return 401 "Access denied";
+    }
+}

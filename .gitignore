@@ -1,0 +1,26 @@
+# environment
+.env
+*env*
+env/*
+venv*
+*venv
+*venv*
+*.bak
+*_bak
+*_BAK
+pdf_llm/.env
+*/.env
+# cache and python
+__pycache__/*
+*__pycache__*
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+# nginx not required files
+nginx-*
+# any cet files
+*.key
+*.cert
+*.crt
+
