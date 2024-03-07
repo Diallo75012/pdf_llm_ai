@@ -11,3 +11,16 @@ sudo openssl req -x509 -nodes -days 367 -newkey rsa:2048 -keyout /etc/ssl/privat
 # go in virtualenv > langchain community librairy > llms > ollama.py > change the model name of the one you want to run : mistral:7b for example at line 35
 
 # for nginx: uncomment 'server_names_hash_bucket_size 64;' in /etc/nginx/nginx.conf file to activate your domain name site preventing errors of having several domains served (hash bucket memory problem due to several server names)
+
+# create a .streamlit/secrets.toml folder and file in order to use secrets in your streamlit app
+```
+# then just put this in your toml file and fill in the fields. i put dialect=postgresql for mine
+[connections.my_database] # my_database will be used as name when initalizing database (conn = st.connection("my_database", type="sql"))
+    type="sql"
+    dialect="mysql"
+    username="xxx"
+    password="xxx"
+    host="example.com" # IP or URL
+    port=3306 # Port number
+    database="mydb" # Database name
+```

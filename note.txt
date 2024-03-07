@@ -8,7 +8,7 @@ def validate_session(request):
     return HttpResponse(status=200)
 
 
-#### NGINX
+#### NGINX ####
 
 sudo apt update
 sudo apt install nginx
@@ -21,7 +21,7 @@ sudo ln -s /etc/nginx/sites-available/creditizens.local /etc/nginx/sites-enabled
 sudo nginx disable
 
 
-#### GUNICORN
+#### GUNICORN ####
 pip install gunicorn
 # create a config file: nano gunicorn.py
   GNU nano 6.2                                                                         gunicorn.py                                                                                   
@@ -55,7 +55,7 @@ daemon = True
 sudo mkdir -pv /var/{log,run}/gunicorn/
 
 
-#### Get 3D representation of PGVector Collections Embeddings data points
+#### Get 3D representation of PGVector Collections Embeddings data points ####
 # Extract Data from PostgreSQL
 import pandas as pd
 import sqlalchemy
@@ -94,4 +94,59 @@ for i, txt in enumerate(df['name']):
     ax.text(df['x'][i], df['y'][i], df['z'][i], txt, size=5)
 
 plt.show()
+
+#### STREAMLIT ####
+# database connection
+# create a file .streamlit/secrets.toml with database secrets then connect to db and query db a bit like in flask app with cursors:
+import streamlit as st
+conn = st.connection("pdf_embedded_db", type="sql") # Initialize connection.
+df = conn.query('SELECT * FROM mytable;', ttl="10m") # Perform query ttl is to have expiry for cached db result otherwise streamlit cache it forever, disable cache with ttl=0
+
+# can also create a .streamlit/config.toml file to ut there all configs about theme, server port, telemetry opt-in/out...etc
+run : streamlit config show  # to see configs. IMPORTANT FOR PRODUCTION SO SEE VALUES AND ADD THE ONES THAT YOU FIND INTERESTING TO SET
+
+## eg. of /.streamlit/secrets.toml:
+[connections.pdf_embedded_db]  # use in your code this name to initialize db conn = st.connection("pdf_embedded_db", type="sql")
+    type="sql"
+    dialect="postgresql"
+    username="username"
+    password="password"
+    host="localhsot" # IP or URL
+    port=5432 # Port number
+    database="db" # Database name
+
+
+## eg. of /.streamlit/config.toml:
+# set server port
+[server]
+port = 8501
+# file upload size
+# maxUploadSize = 200
+# if want to bind server to a specific address where it listen to for client queries
+# address =
+# root where the streamlit app should be served from (no root directory will work so use user directories specially in Dockerfile working directory)
+# baseUrlPath = ""
+
+[browser]
+# opt-out of telemetry
+gatherUsageStats = false
+# serverAddress = "localhost"
+# serverPort = 8501 # but will defaut to server.port value
+
+[theme]
+# base =
+# primaryColor =
+# backgroundColor =
+# secondaryBackgroundColor =
+# textColor =
+# font =
+
+[logger]
+# Level of logging: 'error', 'warning', 'info', or 'debug'.'
+# level = "info"
+
+## add pages to the streamlit app by creating a folder called 'pages' and putting inside .py files, each file name will be displayed as a linked text to enter the logic of the .py file representing that file. So the naming of the files are important the UI render of those, it has to be representative of what the page does UX?UI don't forget!.
+
+# at the root directory of the streamlit app create a directory called 'static/' in order to host the app specific static files (.png, .jpg...etc...) static files not the user ones, this is the ones of your app that decorated the webui...
+
 

@@ -26,5 +26,11 @@ nginx-*
 # Gradio folder
 flagged/*
 flagged/
-
+# streamlit
+*/secrets.toml
+*secrets*
+secrets.*
+.streamlit
+.streamlit*
+.streamlit/*
 
