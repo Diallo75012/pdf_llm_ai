@@ -150,3 +150,77 @@ gatherUsageStats = false
 # at the root directory of the streamlit app create a directory called 'static/' in order to host the app specific static files (.png, .jpg...etc...) static files not the user ones, this is the ones of your app that decorated the webui...
 
 
+#### GUNICORN ####
+# make the directory that host the gunicor.sock file that will be created automatically and make those folders writable
+sudo mkdir -p /opt/creditizens-local/run/
+
+# start server
+gunicorn --workers 3 --bind unix:/opt/creditizens-local/run/gunicorn.sock pdf_llm.wsgi:application # fron chatgpt good!
+gunicorn --env DJANGO_SETTINGS_MODULE={{ DJANGO_SETTINGS_MODULE }} webApp.wsgi -b :{{ DJANGO_LISTENING_PORT }}&" # from ansible past project (I prefer this one)
+
+### DJANGO REDIRECT USER AFTER AUTHENTICATION TO STREAMLIT APP ####
+
+from django.shortcuts import redirect
+from django.contrib.auth import authenticate, login
+
+def my_login_view(request):
+    # This is a simplified example; you'll typically get these from the request.POST
+    username = 'user'
+    password = 'pass'
+
+    user = authenticate(request, username=username, password=password)
+    if user is not None:
+        login(request, user)
+        # Redirect to the Streamlit app after successful login
+        return redirect('/streamlit')
+    else:
+        # Return an 'invalid login' error message
+        return ...
+
+#### LANGCHAIN GROQ #####
+pip install langchain-groq
+# initialize groq
+from langchain_groq import ChatGroq
+
+llm = ChatGroq(temperature=0, groq_api_key="YOUR_API_KEY", model_name="mixtral-8x7b-32768")
+
+#### STREAMLIT ERRORS ####
+## streamlit documentation error : got error and found solution here: https://github.com/langchain-ai/langchain/issues/10618
+In the documentation they are using llm(input_text) in a function when the solution here is to use 'llm.predict' to call the llm with the input_text
+
+## Error of having files uploaded not being read and returning None in the code
+You need to use file uploaded outside of the st.form and then it is going to work
+
+## Don't call st.write after having  defined it in variable st.subheader otherwise you will get an error:
+StreamlitAPIException: _repr_html_() is not a valid Streamlit command.
+
+
+
+#### STREAMLIT OBJECT FIELD FOR FILE UPLOAD ####
+# .pdf file:
+UploadedFile(
+  file_id='e18e8bcf-bd3b-46bd-942b-290866c647ec',
+  name='cryotherapy_paper.pdf',
+  type='application/pdf',
+  size=1064483,
+  _file_urls=file_id: "e18e8bcf-bd3b-46bd-942b-290866c647ec" upload_url: "/_stcore/upload_file/20596ea6-5768-48d0-86a8-83195925f359/e18e8bcf-bd3b-46bd-942b-290866c647ec" delete_url: "/_stcore/upload_file/20596ea6-5768-48d0-86a8-83195925f359/e18e8bcf-bd3b-46bd-942b-290866c647ec"
+)
+
+# .txt file:
+UploadedFile(
+  file_id='f96815e5-e049-4d93-9370-d61f19ad2a36',
+  name='article.txt',
+  type='text/plain',
+  size=3539,
+  _file_urls=file_id: "f96815e5-e049-4d93-9370-d61f19ad2a36" upload_url: "/_stcore/upload_file/ab15c7d8-74fe-4d0c-a473-4e8c1a56e00a/f96815e5-e049-4d93-9370-d61f19ad2a36" delete_url: "/_stcore/upload_file/ab15c7d8-74fe-4d0c-a473-4e8c1a56e00a/f96815e5-e049-4d93-9370-d61f19ad2a36"
+)
+
+# get head of document displayed to have an overview of the document
+# st.subheader('Raw data')
+# st.write(data)
+
+
+
+
+
+
