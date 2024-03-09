@@ -177,6 +177,11 @@ def my_login_view(request):
         # Return an 'invalid login' error message
         return ...
 
+#### PGVECTOR DJANGO ####
+# check this to have some examples in how to enable the extension in django and also how to use the field in models.py:
+https://pypi.org/project/pgvector/
+
+
 #### LANGCHAIN GROQ #####
 pip install langchain-groq
 # initialize groq

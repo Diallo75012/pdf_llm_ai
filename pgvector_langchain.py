@@ -22,7 +22,7 @@ os.environ["OPENAI_API_KEY"] = os.getenv('OPENAI_API_KEY')
 list_documents_txt = ["cardano_meme_coin.txt", "best_meme_coins_2024.txt", "history_of_coins.txt", "article.txt"]
 
 # Use ollama to create embeddings
-embeddings = OllamaEmbeddings(temperature=0)
+embeddings = OllamaEmbeddings(model="mistral:7b", temperature=0)
 
 # define connection to pgvector database
 CONNECTION_STRING = PGVector.connection_string_from_db_params(
@@ -43,13 +43,14 @@ def chunk_doc(path: str, files: list) -> list:
   for file in files:
     loader = TextLoader(f"{path}/{file}")
     documents = loader.load()
+    # print("Documents: ", documents)
     # using CharaterTextSplitter (use separator split text)
     # text_splitter = CharacterTextSplitter(separator="\n\n", chunk_size=200, chunk_overlap=20)
     # using RecursiveCharacterTextSplitter (maybe better)
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=230, chunk_overlap=20)
     docs = text_splitter.split_documents(documents)
     list_docs.append(docs)
-    print(f"Doc: {docs}\nLenght list_docs: {len(list_docs)}")
+    # print(f"Doc: {docs}\nLenght list_docs: {len(list_docs)}")
   return list_docs
 
 # using PGVector
@@ -94,10 +95,11 @@ def vector_db_override(doc, embedding, collection, connection):
 ### USE OF EMBEDDING HELPER FOR BUSINESS LOGIC
 ## Creation of the collection
 all_docs = chunk_doc("/home/creditizens/voice_llm", ["article.txt"]) # list_documents_txt
+# print("ALL DOCS: ", all_docs)
 def create_embedding_collection(all_docs: list) -> str:
   collection_name = COLLECTION_NAME
   connection_string = CONNECTION_STRING
-  count = 0
+  count = 1
   for doc in all_docs:
     print(f"Doc number: {count} with lenght: {len(doc)}")
     vector_db_create(doc, collection_name, connection_string) # this to create/ maybe override also
@@ -107,27 +109,41 @@ def create_embedding_collection(all_docs: list) -> str:
 # print(create_embedding_collection(all_docs))
 
 ##  similarity query
-question = "What is the story of Azabujuuban ?"
+# question = "What is the story of Azabujuuban ?"
 
-def similarity_search(question):
+def similarity_search(question, COLLECTION_NAME, CONNECTION_STRING, embeddings):
   db = vector_db_retrieve(COLLECTION_NAME, CONNECTION_STRING, embeddings)
   docs_and_similarity_score = db.similarity_search_with_score(question)
+  result = []
   for doc, score in docs_and_similarity_score:
     print("-" * 80)
     print("Score: ", score)
     print(doc.page_content)
     print("-" * 80)
+    result.append({'content': f"{doc.page_content}",'score': f"{score}",})
+  return result
+
+# get the best content from the highest score:
+#score_list = []
+#for elem in result:
+#  score_list.append(elem["score"])
+#best_score_response = ''.join([elem["content"] for elem in result if elem["score"] == max(score_list)])
+
 # print(similarity_search("What are the 9 Rules Rooms?"))
 
 ## MMR (Maximal Marginal Relevance) query
-def MMR_search(question):
+def MMR_search(question, COLLECTION_NAME, CONNECTION_STRING, embeddings):
   db = vector_db_retrieve(COLLECTION_NAME, CONNECTION_STRING, embeddings)
   docs_and_MMR_score = db.max_marginal_relevance_search_with_score(question)
+  result = []
   for doc, score in docs_and_MMR_score:
     print("-" * 80)
     print("Score: ", score)
     print(doc.page_content)
     print("-" * 80)
+    result.append({'content': f"{doc.page_content}",'score': f"{score}",})
+  return result
+
 # print(MMR_search("What are the Rules Rooms?"))
 
 ## OR use ollama query embedding
@@ -136,9 +152,9 @@ def ollama_embedding(text):
   query_result = embeddings.embed_query(text)
   return query_result
 
-def answer_retriever(query, collection, connection, embedding):
+def answer_retriever(query, collection, connection, embedding, llm=ChatOllama(model="mistral:7b")):
   db = vector_db_retrieve(collection, connection, embedding)
-  llm = ChatOllama(model="mistral:7b")
+  llm = llm
   retriever = db.as_retriever(
     search_kwargs={"k": 3} # 3 best responses
   )

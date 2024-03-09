@@ -10,6 +10,9 @@ sudo openssl req -x509 -nodes -days 367 -newkey rsa:2048 -keyout /etc/ssl/privat
 
 # go in virtualenv > langchain community librairy > llms > ollama.py > change the model name of the one you want to run : mistral:7b for example at line 35
 
+# go in virtualenv > langchain_community library > embeddings > ollama.py > change the model llama2 to mistral:7b or the model that you have available OR just set in your code:  
+```embeddings = OllamaEmbeddings(model="mistral:7b", temperature=0)```
+
 # for nginx: uncomment 'server_names_hash_bucket_size 64;' in /etc/nginx/nginx.conf file to activate your domain name site preventing errors of having several domains served (hash bucket memory problem due to several server names)
 
 # create a .streamlit/secrets.toml folder and file in order to use secrets in your streamlit app
