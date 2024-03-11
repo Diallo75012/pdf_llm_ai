@@ -36,6 +36,9 @@ from langchain_community.document_loaders import PyPDFLoader
 from io import StringIO
 import json
 import time
+# Agent team import
+import agent_team
+
 
 load_dotenv()
 
@@ -47,15 +50,18 @@ OPENAI_API_KEY=os.getenv("OPENAI_API_KEY")
 connection_string = pgvector_langchain.CONNECTION_STRING
 # collection_name --> we will use file name in function to define it
 
+# for pgvector module
 embeddings = pgvector_langchain.embeddings
 
-st.title('🦜🔗 Quickstart App')
-
+#for llms
 openai_api_key = st.sidebar.text_input('OpenAI API Key', type='password')
-
 openai_llm = OpenAI(temperature=0.7, openai_api_key=openai_api_key)
 custom_llm = ChatOpenAI(temperature=0.1, model=OPENAI_MODEL_NAME, max_tokens=1024)
 groq_llm = ChatGroq(temperature=0.1, groq_api_key=OPENAI_API_KEY, model_name=OPENAI_MODEL_NAME) # mixtral-8x7b groq llm
+
+# from agent_team
+topic = agent_team.topic
+result = agent_team.result
 
 ### HELPER FUNCTIONS
 
@@ -142,6 +148,10 @@ def load_docs(file_uploaded, file_name):
     print("All Text: ", all_text)
     return all_text
 
+### APP START ####
+st.title('🦜🔗 Quickstart App')
+
+## UPLOAD DOCUMENT ANd EMBEDDING
 # User uploads document and embedded before querying
 doc_uploaded = st.file_uploader("Upload your file", type=[".pdf",".txt"], accept_multiple_files=False,)
 
@@ -201,7 +211,7 @@ if doc_uploaded is not None:
     #st.success("Now Your Can Query To Get Insights About The Document")
     #st.warning("Make sure the uploaded document type is supported (ppdf, txt)", icon="🔥")
 
-#### FORM WITH USER PROMPTING LOGIC TO LLM
+#### FORM WITH USER PROMPTING LOGIC TO LLM/AGENT
 # need to add logic to query embeddings and maybe use agent crew to work
 with st.form('my_form'):
     ### USER PROMPT PART
@@ -251,7 +261,9 @@ with st.form('my_form'):
             # get llm check the answer and provide more insight
             llm_insight_on_response = dict(groq_llm.invoke(response))["content"]
             st.info(llm_insight_on_response)
-          
+
+        # Agent work result
+        st.info(result)
 
 
 
