@@ -60,12 +60,12 @@ groq_llm = ChatGroq(temperature=0.1, groq_api_key=OPENAI_API_KEY, model_name=OPE
 ### HELPER FUNCTIONS
 
 def generate_response(input_text, llm=ChatGroq(temperature=0.1, groq_api_key=OPENAI_API_KEY, model_name=OPENAI_MODEL_NAME)):
-    st.info(llm.predict(input_text)) # use llm.predict(input_text) as llm(input_text) like in the documentation won't work
+    st.info(llm.invoke(input_text)) # use llm.invoke(input_text) as llm(input_text) like in the documentation won't work
 
 def store_embeddings(input_text, embedding_llm_engine):
     print("######################  TYPE OF 'input_text' from function: ", type(input_text))
     llm = embedding_llm_engine
-    st.info() # use llm.predict(input_text) as llm(input_text) like in the documentation won't work
+    st.info() # use llm.invoke(input_text) as llm(input_text) like in the documentation won't work
 
 def chunk_doc_text(text_of_doc: str, name_of_doc: str) -> list:
   if text_of_doc != "" and text_of_doc is not None:
@@ -83,14 +83,14 @@ def chunk_doc_text(text_of_doc: str, name_of_doc: str) -> list:
       print("DOCS TYPE: ", type(docs))
       list_docs.append(docs)
       count = 1
-      st.info(f"Number of chunks: {len(docs)}")
+      st.info(f"# Number of chunks: {len(docs)}")
       if len(docs) > 3:
-        st.info("# Overview of 2 first chunks parts")
+        st.info("### Overview of 2 first chunks parts")
         for doc in docs[0:2]:
-          st.info(f"Part {count} chunk of document: {doc}\n")
+          st.info(f"##### Part {count} chunk of document: {doc}\n")
           time.sleep(0.5)
           count += 1
-        st.info("Please wait while other parts being processed...")
+        st.info("##### Please wait while other parts being processed...")
       else:
         for doc in docs:
           st.info(f"Part {count} chunk of document: {doc}\n")
@@ -229,19 +229,29 @@ with st.form('my_form'):
         # this to query database for embedding retrieval
         with st.spinner("Wait while embedding are being analyzed..."):
           print("FILE NAME: ", file_name)
-          # Ollama retriever using 'RetrievalQA.from_chain_type': tried this retriever but it is not efficient at all
-          # retrieve_answer = answer_retriever(text, file_name, connection_string, embeddings)["Response"] # can add an extra argument for 'llm' used if wan't to change, default is ChatOllama(model="mistral:7b")
-          # Similarity search retrieval
-          retrieve_answer = similarity_search(text, file_name, connection_string, embeddings)
-          # MMR search retrieval
+          # Ollama retriever using 'RetrievalQA.from_chain_type': tried this retriever but it is not efficient at all. returns type str
+          retrieve_answer = answer_retriever(text, file_name, connection_string, embeddings)["Response"] # can add an extra argument for 'llm' used if wan't to change, default is ChatOllama(model="mistral:7b")
+          # Similarity search retrieval. returns type AiMessage
+          # retrieve_answer = similarity_search(text, file_name, connection_string, embeddings)
+          # MMR search retrieval. returns type AiMessage
           # retrieve_answer = MMR_search(text, file_name, connection_string, embeddings)
           
           # this is only for similarity search and mmr as it returns a list of dictionaries
           score_list = []
-          for elem in retrieve_answer:
-            score_list.append(elem["score"])
-          best_score_response = ''.join([elem["content"] for elem in retrieve_answer if elem["score"] == max(score_list)])
-          st.info(groq_llm.predict(retrieve_answer))
+          try:
+            for elem in retrieve_answer:
+              score_list.append(elem["score"])
+            # get smallest score so shortest vector so closest relationship
+            response = ''.join([elem["content"] for elem in retrieve_answer if elem["score"] == min(score_list)])
+          except Exception as e:
+            print("Error: ", e)
+            response = retrieve_answer
+            print("Type response (retrieve_answer): ", type(response))
+
+            # get llm check the answer and provide more insight
+            llm_insight_on_response = dict(groq_llm.invoke(response))["content"]
+            st.info(llm_insight_on_response)
+          
 
 
 
