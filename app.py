@@ -59,9 +59,10 @@ openai_llm = OpenAI(temperature=0.7, openai_api_key=openai_api_key)
 custom_llm = ChatOpenAI(temperature=0.1, model=OPENAI_MODEL_NAME, max_tokens=1024)
 groq_llm = ChatGroq(temperature=0.1, groq_api_key=OPENAI_API_KEY, model_name=OPENAI_MODEL_NAME) # mixtral-8x7b groq llm
 
-# from agent_team
-topic = agent_team.topic
-result = agent_team.result
+# instantiate our agent team here
+project_agents = agent_team.project_agents
+# put result in a variable to have webui display
+result = project_agents.kickoff()
 
 ### HELPER FUNCTIONS
 
@@ -80,7 +81,7 @@ def chunk_doc_text(text_of_doc: str, name_of_doc: str) -> list:
       # using CharaterTextSplitter (use separator split text)
       # text_splitter = CharacterTextSplitter(separator="\n\n", chunk_size=200, chunk_overlap=20)
       # using RecursiveCharacterTextSplitter (maybe better)
-      text_splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=20) # instance create to chunk doc or text
+      text_splitter = RecursiveCharacterTextSplitter(chunk_size=230, chunk_overlap=10, separator=["\n\n", "\n"]) # instance create to chunk doc or text
       document = [Document(page_content=text_of_doc, metadata={"source": f"{name_of_doc}"})] # List is needed here for it to be a LangChain document as the '.Document'
       # print("DOCUMENT: ", document)
       # here we use '.split_documents' as we have formatted same as what is returned by 'TextLoader(f"{path}/{file}").load()' but keep in mind that '.split_text' can be used
@@ -238,32 +239,41 @@ with st.form('my_form'):
             # generate_response(text) # can add 'llm' if need to change it, default is groq_llm
         # this to query database for embedding retrieval
         with st.spinner("Wait while embedding are being analyzed..."):
-          print("FILE NAME: ", file_name)
+          # print("FILE NAME: ", file_name)
+          
           # Ollama retriever using 'RetrievalQA.from_chain_type': tried this retriever but it is not efficient at all. returns type str
           retrieve_answer = answer_retriever(text, file_name, connection_string, embeddings)["Response"] # can add an extra argument for 'llm' used if wan't to change, default is ChatOllama(model="mistral:7b")
+          
           # Similarity search retrieval. returns type AiMessage
           # retrieve_answer = similarity_search(text, file_name, connection_string, embeddings)
+          
           # MMR search retrieval. returns type AiMessage
           # retrieve_answer = MMR_search(text, file_name, connection_string, embeddings)
           
           # this is only for similarity search and mmr as it returns a list of dictionaries
-          score_list = []
-          try:
-            for elem in retrieve_answer:
-              score_list.append(elem["score"])
+          #score_list = []
+          #try:
+            #for elem in retrieve_answer:
+              #score_list.append(elem["score"])
             # get smallest score so shortest vector so closest relationship
-            response = ''.join([elem["content"] for elem in retrieve_answer if elem["score"] == min(score_list)])
-          except Exception as e:
-            print("Error: ", e)
-            response = retrieve_answer
-            print("Type response (retrieve_answer): ", type(response))
+            #response = ''.join([elem["content"] for elem in retrieve_answer if elem["score"] == min(score_list)])
+          #except Exception as e:
+            #print("Error: ", e)
+            #response = retrieve_answer
+            #print("Type response (retrieve_answer): ", type(response))
 
             # get llm check the answer and provide more insight
-            llm_insight_on_response = dict(groq_llm.invoke(response))["content"]
-            st.info(llm_insight_on_response)
+            #llm_insight_on_response = dict(groq_llm.invoke(response))["content"]
+            #st.info(llm_insight_on_response)
 
-        # Agent work result
-        st.info(result)
+          # topic taken from question
+          topic = text
+          # Agent work result
+          st.header('Agents are working for you', divider='green')
+          st.subheader('See under agents workflow and actions while waiting for the report.')
+          st.info(result)
+          # after agents are done we can get statistics metrics
+          st.success(project_agents.usage_metrics)
 
 
 

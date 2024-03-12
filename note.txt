@@ -224,7 +224,9 @@ UploadedFile(
 # st.subheader('Raw data')
 # st.write(data)
 
-
+#### GIT
+# to have empty folder committed
+add a .gitkeep file in every folder
 
 
 
