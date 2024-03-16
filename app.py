@@ -364,7 +364,7 @@ class AgentTeam:
       tools=[search_tool],
       allow_delegation=True,
       llm=ollama_llm,
-      max_rpm=2,
+      max_rpm=5,
       max_iter=3,
     )
     return self.online_searcher
@@ -380,7 +380,7 @@ class AgentTeam:
       tools=[database_retriever_tool],
       allow_delegation=True,
       llm=ollama_llm,
-      max_rpm=2,
+      max_rpm=5,
       max_iter=3,
     )
     return self.database_retriever
@@ -396,7 +396,7 @@ class AgentTeam:
       tools=[file_reader_tool, search_report_dir_docs_tool, database_search_report_dir_docs_tool, file_tool, search_tool],
       allow_delegation=False,
       llm=ollama_llm,
-      max_rpm=2,
+      max_rpm=5,
       max_iter=3,
     )
     return self.critical_results
@@ -412,7 +412,7 @@ class AgentTeam:
       tools=[file_reader_tool, final_report_dir_docs_tool, advice_from_search_report_dir_docs_tool, file_tool],
       allow_delegation=False,
       llm=ollama_llm,
-      max_rpm=2,
+      max_rpm=5,
       max_iter=3,
     )
     return self.report_creator
@@ -451,7 +451,7 @@ class TaskGroups:
   def DatabaseEmbeddingsRetrievalTaks(self):
     self.database_embeddings_retrieval = Task(
       description=f"""Retrieving from the database information by running a tool that will provide information about the best vector form the embedded database data. The tool is already set with user topic '{self.topic}' so will retrieve the information and return an answer that can be used.""",
-      expected_output=f"After retrieving information returned by the database tool about the topc '{self.opic}', you will produce a report with insights answering to user question '{self.topic}'. The report is for the presentation before the board managers, therefore, need to be written with a professional tone and be very organized. The report shoudl have titles, parapgraphs and the answer to the user request ('{self.topic}'). The report shoudl highlight what was the returned answer fromt he database. If the database doesn't retrieve  any information because the database doesn't have the information or because of an error, mention it in the report and make it very short jsut to tell what is the error or that the database retrieved answer is too far from the subject meaning that the database doesn't have any answer about it. output a file report using markdown at '{self.database_search_report_dir}/{self.output_file_database_search}'",
+      expected_output=f"After retrieving information returned by the database tool about the topc '{self.topic}', you will produce a report with insights answering to user question '{self.topic}'. The report is for the presentation before the board managers, therefore, need to be written with a professional tone and be very organized. The report shoudl have titles, parapgraphs and the answer to the user request ('{self.topic}'). The report shoudl highlight what was the returned answer fromt he database. If the database doesn't retrieve  any information because the database doesn't have the information or because of an error, mention it in the report and make it very short jsut to tell what is the error or that the database retrieved answer is too far from the subject meaning that the database doesn't have any answer about it. output a file report using markdown at '{self.database_search_report_dir}/{self.output_file_database_search}'",
       agent=AgentTeam(topic=self.topic).DatabaseRetriever(),
       async_execution=False,
       output_file=f"{self.database_search_report_dir}/{self.output_file_database_search}" 
@@ -485,19 +485,19 @@ class TaskGroups:
 
 class ProjectAgents:
 
-  def __init__(self, topic):
+  def __init__(self, topic, online_search, database_embeddings_retrieval, judge_data, produce_report, online_searcher, database_retriever, critical_results, report_creator):
     # topic
     self.topic = topic
     # tasks
-    self.online_search = TaskGroups(topic=self.topic).OnlineSearchTask()
-    self.database_embeddings_retrieval = TaskGroups(topic=self.topic).DatabaseEmbeddingsRetrievalTaks()
-    self.judge_data = TaskGroups(topic=self.topic).JudgeDataTask()
-    self.produce_report = TaskGroups(topic=self.topic).ProduceReportTask()
+    self.online_search = online_search
+    self.database_embeddings_retrieval = database_embeddings_retrieval
+    self.judge_data = judge_data
+    self.produce_report = produce_report
     # agents
-    self.online_searcher = AgentTeam(topic=self.topic).OnlineSearcher()
-    self.database_retriever = AgentTeam(topic=self.topic).DatabaseRetriever()
-    self.critical_results = AgentTeam(topic=self.topic).CriticalResults()
-    self.report_creator = AgentTeam(topic=self.topic).ReportCreator()
+    self.online_searcher = online_searcher
+    self.database_retriever = database_retriever
+    self.critical_results = critical_results
+    self.report_creator = report_creator
 
   def AgentsCrew(self):
     self.project_agents = Crew(
@@ -516,6 +516,31 @@ class ProjectAgents:
 # print(result)
 # ProjectAgents(topic=f"{topic}").AgentsCrew()
 
+### TEST PRINT STDOUT OR STDERR TO THE WEBUI SO GET TERMINAL OUTPUT FORWARDED TO WEBUI
+
+#with st.form("test_form"):
+  #text = st.text_area("Enter text:", "What are the main findings in this paper?", key='test')
+  #submition = st.form_submit_button("Read Stdout")
+  #if submition:
+    #import sys
+    #from contextlib import contextmanager
+    #from io import StringIO
+
+    #@contextmanager
+    #def capture_output():
+        #new_stdout, new_stderr = StringIO(), StringIO()
+        #old_stdout, old_stderr = sys.stdout, sys.stderr
+        #try:
+            #sys.stdout, sys.stderr = new_stdout, new_stderr
+            #yield sys.stdout
+        #finally:
+            #sys.stdout, sys.stderr = old_stdout, old_stderr
+
+    # Example usage
+    #with capture_output() as captured:
+        #print("This is the text output from terminal: ", text)
+
+        #st.write(captured.getvalue())
 
 
 
@@ -586,12 +611,44 @@ with st.form('my_form'):
           retrieved_answer_from_app = True
           topic_exist = True
           print("is answer retrieved?: ", retrieved_answer_from_app, "Does topic exist?: ", topic_exist)
-          result = ProjectAgents(topic=f"{topic}").AgentsCrew()
+          # tasks 
+          online_search = TaskGroups(topic=f"{topic}").OnlineSearchTask()
+          database_embeddings_retrieval = TaskGroups(topic=f"{topic}").DatabaseEmbeddingsRetrievalTaks()
+          judge_data = TaskGroups(topic=f"{topic}").JudgeDataTask()
+          produce_report = TaskGroups(topic).ProduceReportTask()
+          # agents
+          online_searcher = AgentTeam(topic=f"{topic}").OnlineSearcher()
+          database_retriever = AgentTeam(topic=f"{topic}").DatabaseRetriever()
+          critical_results = AgentTeam(topic=f"{topic}").CriticalResults()
+          report_creator = AgentTeam(topic=f"{topic}").ReportCreator()
+          
+          project_agent_team_work = ProjectAgents(topic, online_search, database_embeddings_retrieval, judge_data, produce_report, online_searcher, database_retriever, critical_results, report_creator).AgentsCrew()
+          
+          import sys
+          from contextlib import contextmanager
+          from io import StringIO
+
+          @contextmanager
+          def capture_output():
+            new_stdout, new_stderr = StringIO(), StringIO()
+            old_stdout, old_stderr = sys.stdout, sys.stderr
+            try:
+              sys.stdout, sys.stderr = new_stdout, new_stderr
+              yield sys.stdout
+            finally:
+              sys.stdout, sys.stderr = old_stdout, old_stderr
+
+          with capture_output() as captured:
+            result = project_agent_team_work.kickoff()
+            st.write_stream(captured.getvalue())
+          
+          # result = project_agent_team_work.kickoff()
           print("RESULT: ", result)
-          st.info(result)
+          # st.write_stream(result)
+          # st.info(result)
           # after agents are done we can get statistics metrics
-          result_metrics = get_agents_metrics()
-          st.success(result_metrics)
+          # result_metrics = get_agents_metrics()
+          # st.success(result_metrics)
 
 
 
