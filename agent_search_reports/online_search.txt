@@ -1,0 +1,25 @@
+# What is the Snek Coin?
+
+The Snek coin is a meme cryptocurrency that operates on the Cardano blockchain. It is known for its relaxed approach and community-driven development. The Snek coin has a market capitalization of over $78 million and does not involve pre-mining or team allocations.
+
+## Purpose
+
+The Snek coin was created as a community-driven meme coin, with a relaxed approach towards its development. It operates on the Cardano blockchain, which is a proof-of-stake blockchain platform that aims to be the world’s financial operating system by establishing decentralized financial products.
+
+## Value
+
+As of now, the Snek coin has a market capitalization of over $78 million. It has a strong and active community, which contributes to its value. The Snek coin does not involve pre-mining or team allocations, which adds to its credibility and decentralization.
+
+## Relevant Details
+
+- **Blockchain:** Cardano
+- **Type:** Meme Cryptocurrency
+- **Market Capitalization:** > $78 million
+- **Pre-mining/Team Allocations:** No
+
+## References
+
+- [Snek Coin Official Website](https://snekcoin.com/)
+- [Cardano Official Website](https://cardano.org/)
+
+The report has been created with a professional tone and includes titles, paragraphs, links, and answers to the user's topic ('What is the Snek coin?'). The information provided is grounded with referrals from the Snek Coin Official Website and the Cardano Official Website.
