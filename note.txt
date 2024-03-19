@@ -157,6 +157,9 @@ sudo mkdir -p /opt/creditizens-local/run/
 # start server
 gunicorn --workers 3 --bind unix:/opt/creditizens-local/run/gunicorn.sock pdf_llm.wsgi:application # fron chatgpt good!
 gunicorn --env DJANGO_SETTINGS_MODULE={{ DJANGO_SETTINGS_MODULE }} webApp.wsgi -b :{{ DJANGO_LISTENING_PORT }}&" # from ansible past project (I prefer this one)
+# but we have set a gunicorn.py file with all configs so we just run this file like that (need to find where is the gunicorn binary, mine in virtual env):
+sudo /home/creditizens/pdf_llm_app/django_pdf_llm_venv/bin/gunicorn -c gunicorn.py pdf_llm.wsgi:application
+
 
 ### DJANGO REDIRECT USER AFTER AUTHENTICATION TO STREAMLIT APP ####
 
