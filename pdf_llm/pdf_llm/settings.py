@@ -140,3 +140,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # LOGIN_URL = ""
 # LOGOUT_REDIRECT_URL = ""
 
+# For https configs for django
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# SECURE_SSL_REDIRECT = True # don't need if using nginx for ssl as it could lead to redirect loops
+SESSION_EXPIRE_AT_BROWSER_CLOSE=True
+

@@ -5,35 +5,98 @@ upstream creditizens.local {
 # to not display nginx server version in headers
 server_tokens             off;
 
+# Redirect HTTP to HTTPS
 server {
+    listen 80;
+    server_name creditizens.local;
+    return 301 https://$host$request_uri;
+}
+
+# HTTPS SERVER
+server {
+
     listen 443 ssl;
     server_name creditizens.local;
     ssl_certificate /home/creditizens/pdf_llm_app/nginx-selfsigned.crt;
-    ssl_certificate_key /creditizens/pdf-llm-app/nginx-selfsigned.key;
+    ssl_certificate_key /home/creditizens/pdf_llm_app/nginx-selfsigned.key;
+
+    # General proxy settings
+    proxy_http_version 1.1;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $host;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_read_timeout 86400;
+
+   location / {
+        proxy_pass http://creditizens.local;
+        include proxy_params;  # This includes standard proxy parameters already so no need to double add the proxy_set_header lines
+        # proxy_redirect off; # if having issues with redirects from django to streamlit app use this so nginx default header altering won't be used but the django's ones
+    }
 
     location = /validate_session {
         proxy_pass http://creditizens.local;
-        proxy_set_header Host $host;
+        include proxy_params;
+        # proxy_redirect off;
     }
 
     # mimmic same if decided to use gradio instead of streamlit
-    location /streamlit {
+    location ^~ /streamlit/ {
         auth_request /validate_session;
-        proxy_pass http://localhost:8001; # Streamlit port 8501
+        proxy_pass http://localhost:8002; # Streamlit port normally 8501
         error_page 401 = @error401;
+        error_page 403 = @error403;
+
+        # Fixes the issue with Streamlit internal paths not being correctly proxied
+        proxy_redirect off;
+        rewrite ^/streamlit/(.*)$ /$1 break;
     }
 
-    location /api/ {
-        internal; # Makes this location accessible only for internal redirections
-        proxy_pass http://creditizens.local;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Real-IP $remote_addr;
+    # Handle WebSocket connections for Streamlit under /streamlit
+    location /streamlit/stream {
+        proxy_pass http://localhost:8002/stream;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    # Static content for Streamlit app
+    location ^~ /streamlit/static/ {
+        proxy_pass http://localhost:8002/static/;
+    }
+
+    # Additional Streamlit paths, if any, e.g., media or vendor
+    location ^~ /streamlit/media/ {
+        proxy_pass http://localhost:8002/media/;
+    }
+
+    location ^~ /streamlit/vendor/ {
+        proxy_pass http://localhost:8002/vendor/;
+    }
+
+    #location /api/ {
+        #internal; # Makes this location accessible only for internal redirections
+        #proxy_pass http://creditizens.local;
+        #proxy_set_header Host $host;
+        #proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        #proxy_set_header X-Forwarded-Proto $scheme;
+        #proxy_set_header X-Real-IP $remote_addr;
+    #}
+
+    location /static/ {
+        alias /home/creditizens/pdf_llm_app/pdf_llm/static/;
+    }
+
+    location /media/ {
+        alias /home/creditizens/pdf_llm_app/pdf_llm/media/;
     }
 
     location @error401 {
         return 401 "Access denied";
     }
-}
 
+
+    location @error403 {
+        return 302 https://creditizens.local/user-login; # Redirect to a login page
+    }
+}

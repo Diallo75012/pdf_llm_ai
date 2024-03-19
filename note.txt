@@ -19,7 +19,16 @@ server_names_hash_bucket_size 64;
 sudo ln -s /etc/nginx/sites-available/creditizens.local /etc/nginx/sites-enabled/
 # Disable nginx until you finish writing app, enable it once all is done to enable ssl redirects and reverse proxy
 sudo nginx disable
-
+# you will get an error because proxy_params have already all the lines starting with proxy_set_header. so do not do like here put one line only with the proxy_params line or the proxy_set_header lines only
+location / {
+        proxy_pass http://creditizens.local;
+        include proxy_params;  # This includes standard proxy parameters already so no need of the next x4 proxy_set_header
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        # proxy_redirect off; # if having issues with redirects from django to streamlit app use this so nginx default header altering won't be used but the django's ones
+    }
 
 #### GUNICORN ####
 pip install gunicorn
@@ -159,6 +168,8 @@ gunicorn --workers 3 --bind unix:/opt/creditizens-local/run/gunicorn.sock pdf_ll
 gunicorn --env DJANGO_SETTINGS_MODULE={{ DJANGO_SETTINGS_MODULE }} webApp.wsgi -b :{{ DJANGO_LISTENING_PORT }}&" # from ansible past project (I prefer this one)
 # but we have set a gunicorn.py file with all configs so we just run this file like that (need to find where is the gunicorn binary, mine in virtual env):
 sudo /home/creditizens/pdf_llm_app/django_pdf_llm_venv/bin/gunicorn -c gunicorn.py pdf_llm.wsgi:application
+sudo /home/creditizens/pdf_llm_app/django_pdf_llm_venv/bin/gunicorn -c /home/creditizens//pdf_llm_app/pdf_llm/gunicorn.py pdf_llm.wsgi:application
+
 
 
 ### DJANGO REDIRECT USER AFTER AUTHENTICATION TO STREAMLIT APP ####

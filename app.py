@@ -330,7 +330,8 @@ class AgentTeam:
       tools=[search_tool],
       allow_delegation=True,
       #llm=ollama_llm,
-      llm=lmstudio,
+      #llm=lmstudio,
+      llm=groq_llm,
       max_rpm=5,
       max_iter=3,
     )
@@ -347,7 +348,8 @@ class AgentTeam:
       #tools=[self.database_retriever_tool],
       allow_delegation=True,
       #llm=ollama_llm,
-      llm=lmstudio,
+      #llm=lmstudio,
+      llm=groq_llm,
       max_rpm=5,
       max_iter=3,
     )
@@ -364,7 +366,8 @@ class AgentTeam:
       tools=[file_reader_tool, search_report_dir_docs_tool, database_search_report_dir_docs_tool, file_tool, search_tool],
       allow_delegation=False,
       #llm=ollama_llm,
-      llm=lmstudio,
+      #llm=lmstudio,
+      llm=groq_llm,
       max_rpm=5,
       max_iter=3,
     )
@@ -381,7 +384,8 @@ class AgentTeam:
       tools=[file_reader_tool, final_report_dir_docs_tool, advice_from_search_report_dir_docs_tool, file_tool],
       allow_delegation=False,
       #llm=ollama_llm,
-      llm=lmstudio,
+      #llm=lmstudio,
+      llm=groq_llm,
       max_rpm=5,
       max_iter=3,
     )
@@ -672,7 +676,7 @@ def ask_question_get_agent_team_make_report(file_name):
         #st.write_stream(captured.getvalue())
         with st.spinner("Go have a coffee (OUTSIDE lol ) while agent team are working on producing the best report ever for your meeting..."):
           result = project_agent_team_work.kickoff() 
-          metrics = project_agents.usage_metrics()
+          metrics = project_agent_team_work.usage_metrics()
         # print("RESULT: ", result)
         st.info("Report ready in the 'final_report' folder")
         # st.write_stream(result)
