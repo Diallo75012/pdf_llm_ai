@@ -15,6 +15,8 @@ sudo apt install nginx
 sudo ufw allow 'Nginx HTTPS'
 # uncomment config from /etc/nginx/nginx.conf to avoid problem of nginx seeing several server names
 server_names_hash_bucket_size 64;
+# also in /etc/nginx/nginx.conf set user to computer user
+user creditizens; # instead of www-data
 # create the config file with domain name and create the simlink
 sudo ln -s /etc/nginx/sites-available/creditizens.local /etc/nginx/sites-enabled/
 # Disable nginx until you finish writing app, enable it once all is done to enable ssl redirects and reverse proxy
@@ -31,7 +33,7 @@ location / {
     }
 
 #### GUNICORN ####
-pip install gunicorn
+pip install gunicorn and need to create the right folders and set permission so owner to the comptuer user and not root
 # create a config file: nano gunicorn.py
   GNU nano 6.2                                                                         gunicorn.py                                                                                   
 #!/usr/bin/python3
@@ -168,7 +170,8 @@ gunicorn --workers 3 --bind unix:/opt/creditizens-local/run/gunicorn.sock pdf_ll
 gunicorn --env DJANGO_SETTINGS_MODULE={{ DJANGO_SETTINGS_MODULE }} webApp.wsgi -b :{{ DJANGO_LISTENING_PORT }}&" # from ansible past project (I prefer this one)
 # but we have set a gunicorn.py file with all configs so we just run this file like that (need to find where is the gunicorn binary, mine in virtual env):
 sudo /home/creditizens/pdf_llm_app/django_pdf_llm_venv/bin/gunicorn -c gunicorn.py pdf_llm.wsgi:application
-sudo /home/creditizens/pdf_llm_app/django_pdf_llm_venv/bin/gunicorn -c /home/creditizens//pdf_llm_app/pdf_llm/gunicorn.py pdf_llm.wsgi:application
+# no need sudo as we have put permission of gunicorn folders and files to the computer user creditizens and we use full path so no issues ;)
+/home/creditizens/pdf_llm_app/django_pdf_llm_venv/bin/gunicorn -c /home/creditizens//pdf_llm_app/pdf_llm/gunicorn.py pdf_llm.wsgi:application
 
 
 

@@ -172,22 +172,23 @@ def load_docs(file_uploaded, file_name):
 ### write terminal output to webui
 @contextmanager
 def capture_output():
-  new_stdout, new_stderr = StringIO(), StringIO()
-  old_stdout, old_stderr = sys.stdout, sys.stderr
-  try:
-    sys.stdout, sys.stderr = new_stdout, new_stderr
-    yield sys.stdout
-  finally:
-    sys.stdout, sys.stderr = old_stdout, old_stderr
-# RUN AGENTS
-# instantiate our agent team here
-#def run_agents():
-  #from agent_team import project_agents
-  #return project_agents.kickoff()
+    new_stdout, new_stderr = StringIO(), StringIO()
+    old_stdout, old_stderr = sys.stdout, sys.stderr
+    try:
+        sys.stdout, sys.stderr = new_stdout, new_stderr
+        yield new_stdout, new_stderr
+    finally:
+        sys.stdout, sys.stderr = old_stdout, old_stderr
 
-#def get_agents_metrics():
-  #from agent_team import project_agents
-  #return project_agents.usage_metrics()
+# download final report
+def download_report(final_report_dir, output_file_final_report):
+  st.info("Report ready in the 'final_report' folder and you can download it now")
+  try:
+    with open(f"{final_report_dir}/{output_file_final_report}") as final_report:
+      st.download_button("Download Report Now", final_report, f"{output_file_final_report}")
+      st.write("Hope That This Report Will Help You During The Meeting!")
+  except Exception as e:
+    return f"No report file as been found at {final_report_dir}/{output_file_final_report}, error: {e}"
 
 
 ########################################
@@ -214,10 +215,10 @@ output_file_online_search = "online_search.txt"
 output_file_database_search = "database_search.txt"
 output_file_insight_advice_on_searches = "insight_advice_on_searches.txt"
 output_file_final_report = "final_report.txt"
-search_report_dir = "./agent_search_reports"
-database_search_report_dir="./agent_database_search_reports"
-advice_from_search_report_dir = "./agent_advice_from_search_reports"
-final_report_dir = "./agent_final_report"
+search_report_dir = "/home/creditizens/pdf_llm_app/agent_search_reports"
+database_search_report_dir="/home/creditizens/pdf_llm_app/agent_database_search_reports"
+advice_from_search_report_dir = "/home/creditizens/pdf_llm_app/agent_advice_from_search_reports"
+final_report_dir = "/home/creditizens/pdf_llm_app/agent_final_report"
 
 
 ### SETUP TOOLS FOR AGENTS TO USE
@@ -278,26 +279,30 @@ class MMRRetriever(BaseTool):
 #)
 
 # file reader tool
-class FileReader(BaseTool):
-    name: str = "File Reader"
-    description: str = "This tools is going read all files present in the folder one by one, analyse their content and provide advice to enrich the future report about that topic: {topic}. It takes as argument the name of the file present in the folder so the path folder name and file name. Try file name only if you have already access to the folder. If there is no file ask the agent responsable of producing the file to make it so that you can read it."
-    def _run(self, text_file: str) -> str:
-      with open(text_file, "r") as f:
-        file_content = f.read()
-        return file_content
+file_tool_read_search_report = FileReadTool(file_path=f"{search_report_dir}/{output_file_online_search}")
+file_tool_read_database_report = FileReadTool(file_path=f"{database_search_report_dir}/{output_file_database_search}")
+file_tool_read_advice_report = FileReadTool(file_path=f"{advice_from_search_report_dir}/{output_file_insight_advice_on_searches}")
 
-file_reader_tool = Tool(
-  name="File Reader",
-  func=FileReader.run,
-  description="Read the content of a file to provide you information to analyse from and be able to provide insights and advice, specially around the topic: {topic}",
-)
+#class FileReader(BaseTool):
+    #name: str = "File Reader"
+    #description: str = "This tools is going read all files present in the folder one by one, analyse their content and provide advice to enrich the future report about that topic: {self.topic}. It takes as argument the name of the file present in the folder so the path folder name and file name. Try file name only if you have already access to the folder. If there is no file ask the agent responsable of producing the file to make it so that you can read it."
+    #def _run(self, text_file: str) -> str:
+      #with open(text_file, "r") as f:
+        #file_content = f.read()
+        #return file_content
+
+#file_reader_tool = Tool(
+  #name="File Reader",
+  #func=FileReader.run,
+  #description="Read the content of a file to provide you information to analyse from and be able to provide insights and advice, specially around the topic: {self.topic}",
+#)
 
 # Directory and files tools
 search_report_dir_docs_tool = DirectoryReadTool(directory=f"{search_report_dir}")
 database_search_report_dir_docs_tool = DirectoryReadTool(directory=f"{database_search_report_dir}")
 advice_from_search_report_dir_docs_tool = DirectoryReadTool(directory=f"{advice_from_search_report_dir}")
-final_report_dir_docs_tool = DirectoryReadTool(directory=f"{final_report_dir}")
-file_tool = FileReadTool()
+# final_report_dir_docs_tool = DirectoryReadTool(directory=f"{final_report_dir}")
+
 
 #internet search tool
 search_tool = DuckDuckGoSearchRun()
@@ -359,11 +364,11 @@ class AgentTeam:
   def CriticalResults(self):
     self.critical_results = Agent(
       role="Search Report Judge and Enhancer",
-      goal=f"The user have required more information about '{self.topic}'. You will read the present reports produced by 'Database Retriever' collegue and 'Online Searcher' collegue. You have a 'file_reader_tool' and 'file_tool' to read those reports from the directory 'search_report_dir_docs_tool' and 'database_search_report_dir_docs_tool'. Their reports are located respectively in the files '{self.output_file_online_search}' and  '{self.output_file_database_search}'. After having analyzed the content of those reports and the user need '{self.topic}', you will produce a more elaborated report with a very attrctive and true title, paragraphs with titles to explain the different view points, a paragraph called 'Answer to user' in which there will be your critical thinking about what is the answer of user request, 3 Q&A about the '{self.topic}'. You can get more information if you find that the reports are missing some points by using the 'search_tool' to enrich your answer with examples. Use markdown to write the report.",
+      goal=f"The user have required more information about '{self.topic}'. You will read the present reports produced by 'Database Retriever' collegue and 'Online Searcher' collegue. You have a 'file_tool_read_search_report' to read the reports from the directory 'search_report_dir_docs_tool' from 'Online Searcher' work. After having analyzed the content of those reports and the user needs: '{self.topic}', you will produce a more elaborated report with a very attractive and true title, paragraphs with titles to explain the different view points, a paragraph called 'Answer to user' in which there will be your critical thinking about what is the answer of user request, 3 Q&A about the '{self.topic}'. You can get more information if you find that the reports are missing some points by using the 'search_tool' to enrich your answer with examples. Use markdown to write the report.",
       verbose=True,
       memory=True,
       backstory="""You are an experienced crititcal reviewer about numerous subjects in which you find the gapes and enrich the reports made by others by providing another view on the subject treated. You use also if needed external sources from the internet to prove your point by providing links as referral to what other specialists say about the subject. You reports are very professional and help people to have a full insight on a subject with interesting pertinent view.""",
-      tools=[file_reader_tool, search_report_dir_docs_tool, database_search_report_dir_docs_tool, file_tool, search_tool],
+      tools=[file_tool_read_search_report, file_tool_read_database_report, search_tool],
       allow_delegation=False,
       #llm=ollama_llm,
       #llm=lmstudio,
@@ -377,11 +382,11 @@ class AgentTeam:
   def ReportCreator(self):
     self.report_creator = Agent(
       role="Report Creator",
-      goal=f"The user need insights about '{self.topic}'. You will create a report that the user will be able to use for the next meeting with the board management. Some other collegues made some research online and in the internal organization database about the '{self.topic}' and have produced a full report that you can read from 'Search Report Judge and Enhancer' collegue using the tool 'file_reader_tool' or 'file_tool'. The file written by your collegue 'Search Report Judge and Enhancer' is to be found in this folder '{self.advice_from_search_report_dir}' with the name of file '{self.output_file_insight_advice_on_searches}', and, the 'advice_from_search_report_dir_docs_tool' can help you to find it. Read that file and your job is to create a report for the user to be able to talk about the subject during the board management meeting. It is important to have a report writtem in a professional way and using markdown to have all organized with titles, bullet points, links if available, pertinent to know information, important points to consider. Your produced report should be store in '{self.final_report_dir}' with the name 'output_file_final_report'",
+      goal=f"The user need insights about '{self.topic}'. You will create a report that the user will be able to use for the next meeting with the board management. Some other collegues made some research online and in the internal organization database about the '{self.topic}' and have produced a full report that you can read from 'Search Report Judge and Enhancer' collegue using the tool 'file_tool_read_advice_report'. You will read the present reports produced by 'Database Retriever' collegue and 'Online Searcher' collegue. You have a 'file_tool_read_search_report' to read the reports from 'Online Searcher' work. And, you have a 'file_tool_read_database_report' to read the reports from 'Database Retriever' work. After having analyzed the content of those reports and the user needs: The file written by your collegue 'Search Report Judge and Enhancer' is to be found in this folder '{self.advice_from_search_report_dir}' with the name of file '{self.output_file_insight_advice_on_searches}', and, the 'file_tool_read_advice_report' can help you to read it. Read all those files and your job is to create a report for the user to be able to talk about the subject during the board management meeting. It is important to have a report writtem in a professional way and using markdown to have all organized with titles, bullet points, links if available, pertinent to know information, important points to consider. Your produced report should be store in '{self.final_report_dir}' with the name '{self.output_file_final_report}'.",
       verbose=True,
       memory=True,
       backstory="""You are an experience report producer who have worked in the top 10 US companies and your reports have helped board maangers to make good decisions. You are helping people to succeed during their meetings by having very professional reports that provide pertinent insights on subjects. You helping in the decison making process and are well known for being the best in that task getting ceveral Nobel Prices.""",
-      tools=[file_reader_tool, final_report_dir_docs_tool, advice_from_search_report_dir_docs_tool, file_tool],
+      tools=[file_tool_read_search_report, file_tool_read_database_report, file_tool_read_advice_report],
       allow_delegation=False,
       #llm=ollama_llm,
       #llm=lmstudio,
@@ -673,17 +678,20 @@ def ask_question_get_agent_team_make_report(file_name):
         # get agents conversation logs output in webui
         #with capture_output() as captured:
           #project_agent_team_work.kickoff()
-        #st.write_stream(captured.getvalue())
+        #st.write(captured.getvalue())
+        # Using capture_output in Streamlit
         with st.spinner("Go have a coffee (OUTSIDE lol ) while agent team are working on producing the best report ever for your meeting..."):
-          result = project_agent_team_work.kickoff() 
-          metrics = project_agent_team_work.usage_metrics()
-        # print("RESULT: ", result)
-        st.info("Report ready in the 'final_report' folder")
-        # st.write_stream(result)
-        # st.info(result)
-        # after agents are done we can get statistics metrics
-        # result_metrics = get_agents_metrics()
-        # st.success(result_metrics)
+          with capture_output() as (out, err):      
+            result = project_agent_team_work.kickoff()
+            # Retrieve and display the captured stdout and stderr
+            stdout = out.getvalue()
+            stderr = err.getvalue()
+          if stdout:
+            st.text(f"Working hard for you....Please be patient\n{stdout}")
+          if stderr:
+            st.text(f"Errors/Warnings:\n{stderr}")
+  return f""
+
 
 #### 
 def business_logic():
@@ -691,9 +699,13 @@ def business_logic():
   if start_upload["upload_status"] == "upload done":
     filename = start_upload["file"]
     print("filename: ", filename)
-    ask_question_get_agent_team_make_report(filename)
+    report = ask_question_get_agent_team_make_report(filename)
+  
+  file_exist = os.path.exists(f"{final_report_dir}/{output_file_final_report}")
+  if file_exist == True: 
+    # download report
+    download_report(final_report_dir, output_file_final_report)
 
 business_logic()
-
 
 
