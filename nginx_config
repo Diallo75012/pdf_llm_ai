@@ -28,6 +28,10 @@ server {
     proxy_set_header Connection "upgrade";
     proxy_read_timeout 86400;
 
+    # file upload max size
+    client_max_body_size 2000M;
+
+
    location / {
         proxy_pass http://creditizens.local;
         include proxy_params;  # This includes standard proxy parameters already so no need to double add the proxy_set_header lines

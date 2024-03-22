@@ -32,6 +32,9 @@ location / {
         # proxy_redirect off; # if having issues with redirects from django to streamlit app use this so nginx default header altering won't be used but the django's ones
     }
 
+# control the file size being uploaded by setting a max size value:
+client_max_body_size 2000M;  # this for 2 GB for example
+
 #### GUNICORN ####
 pip install gunicorn and need to create the right folders and set permission so owner to the comptuer user and not root
 # create a config file: nano gunicorn.py
@@ -132,7 +135,7 @@ run : streamlit config show  # to see configs. IMPORTANT FOR PRODUCTION SO SEE V
 [server]
 port = 8501
 # file upload size
-# maxUploadSize = 200
+# maxUploadSize = 200 # increase size if need to add bigger files 1000 = 1GB but change also nginx file upload limit size
 # if want to bind server to a specific address where it listen to for client queries
 # address =
 # root where the streamlit app should be served from (no root directory will work so use user directories specially in Dockerfile working directory)

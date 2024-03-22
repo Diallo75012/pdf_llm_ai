@@ -1,0 +1,12 @@
+# groq, ollama, LMStudio or other mimmicing openai api setup
+OPENAI_API_BASE=""
+OPENAI_MODEL_NAME=""
+OPENAI_API_KEY=""
+
+# database
+DRIVER=psycopg2
+HOST=
+PORT=
+DATABASE=
+USER=
+PASSWORD=

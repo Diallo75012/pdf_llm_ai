@@ -204,11 +204,11 @@ ollama_llm = Ollama(model="mistral:7b")
 #OPENAI_API_BASE="http://localhost:1235/v1"
 #OPENAI_MODEL_NAME=NA # no need model to be loaded in the webui
 #OPENAI_API_KEY=NA # no need freee frreeeeeee freeeeeeeeeeeeeeee
-lmstudio = ChatOpenAI(
-    model_name="no-need",
-    openai_api_key="no-need",
-    openai_api_base="http://localhost:1235/v1",
-)
+#lmstudio = ChatOpenAI(
+    #model_name="no-need",
+    #openai_api_key="no-need",
+    #openai_api_base="http://localhost:1235/v1",
+#)
 
 # set variables for files and folders where agents will store those and read those
 output_file_online_search = "online_search.txt"
@@ -304,7 +304,7 @@ advice_from_search_report_dir_docs_tool = DirectoryReadTool(directory=f"{advice_
 # final_report_dir_docs_tool = DirectoryReadTool(directory=f"{final_report_dir}")
 
 
-#internet search tool
+# internet search tool
 search_tool = DuckDuckGoSearchRun()
        
 ### AGENTS DEFINITION
@@ -331,7 +331,7 @@ class AgentTeam:
       goal=f"Go online using the search_tool in order to gather as much information as you can about external sources to have more insight about the '{self.topic}'. Find information about '{self.topic}'. Visit different aritcles, search papers, publications, wikipedia also if you want to design a well rounded view on the '{self.topic}'. You will produce a report using markdown.",
       verbose=True,
       memory=True,
-      backstory="""You are a specialist of online search and can find information and gather it in a well organized report format using markdown. You are trying to find different view in order to have a well rounded view on the matter you are searching for.""",
+      backstory="""You are a specialist of online search and can find information and gather it in a well organized report format using markdown. You are trying to find different views in order to have a well rounded view on the matter you are searching for.""",
       tools=[search_tool],
       allow_delegation=True,
       #llm=ollama_llm,
@@ -364,7 +364,7 @@ class AgentTeam:
   def CriticalResults(self):
     self.critical_results = Agent(
       role="Search Report Judge and Enhancer",
-      goal=f"The user have required more information about '{self.topic}'. You will read the present reports produced by 'Database Retriever' collegue and 'Online Searcher' collegue. You have a 'file_tool_read_search_report' to read the reports from the directory 'search_report_dir_docs_tool' from 'Online Searcher' work. After having analyzed the content of those reports and the user needs: '{self.topic}', you will produce a more elaborated report with a very attractive and true title, paragraphs with titles to explain the different view points, a paragraph called 'Answer to user' in which there will be your critical thinking about what is the answer of user request, 3 Q&A about the '{self.topic}'. You can get more information if you find that the reports are missing some points by using the 'search_tool' to enrich your answer with examples. Use markdown to write the report.",
+      goal=f"The user have required more information about '{self.topic}'. You will read the present reports produced by 'Database Retriever' collegue and 'Online Searcher' collegue. You have a 'file_tool_read_search_report' to read the report from 'Online Searcher' collegue's work. After having analyzed the content of those reports and the user needs: '{self.topic}', you will produce a more elaborated report with a very attractive and true title, paragraphs with titles to explain the different view points, a paragraph called 'Answer to user' in which there will be your critical thinking about what is the answer of user request, 3 Q&A about the '{self.topic}'. You can get more information if you find that the reports are missing some points by using the 'search_tool' to enrich your answer with examples. Use markdown to write the report.",
       verbose=True,
       memory=True,
       backstory="""You are an experienced crititcal reviewer about numerous subjects in which you find the gapes and enrich the reports made by others by providing another view on the subject treated. You use also if needed external sources from the internet to prove your point by providing links as referral to what other specialists say about the subject. You reports are very professional and help people to have a full insight on a subject with interesting pertinent view.""",
@@ -385,7 +385,7 @@ class AgentTeam:
       goal=f"The user need insights about '{self.topic}'. You will create a report that the user will be able to use for the next meeting with the board management. Some other collegues made some research online and in the internal organization database about the '{self.topic}' and have produced a full report that you can read from 'Search Report Judge and Enhancer' collegue using the tool 'file_tool_read_advice_report'. You will read the present reports produced by 'Database Retriever' collegue and 'Online Searcher' collegue. You have a 'file_tool_read_search_report' to read the reports from 'Online Searcher' work. And, you have a 'file_tool_read_database_report' to read the reports from 'Database Retriever' work. After having analyzed the content of those reports and the user needs: The file written by your collegue 'Search Report Judge and Enhancer' is to be found in this folder '{self.advice_from_search_report_dir}' with the name of file '{self.output_file_insight_advice_on_searches}', and, the 'file_tool_read_advice_report' can help you to read it. Read all those files and your job is to create a report for the user to be able to talk about the subject during the board management meeting. It is important to have a report writtem in a professional way and using markdown to have all organized with titles, bullet points, links if available, pertinent to know information, important points to consider. Your produced report should be store in '{self.final_report_dir}' with the name '{self.output_file_final_report}'.",
       verbose=True,
       memory=True,
-      backstory="""You are an experience report producer who have worked in the top 10 US companies and your reports have helped board maangers to make good decisions. You are helping people to succeed during their meetings by having very professional reports that provide pertinent insights on subjects. You helping in the decison making process and are well known for being the best in that task getting ceveral Nobel Prices.""",
+      backstory="""You are an experience report producer who have worked in the top 10 US companies and your reports have helped board maangers to make good decisions. You are helping people to succeed during their meetings by having very professional reports that provide pertinent insights on subjects. You helping in the decison making process and are well known for being the best in that task getting several Nobel Prices.""",
       tools=[file_tool_read_search_report, file_tool_read_database_report, file_tool_read_advice_report],
       allow_delegation=False,
       #llm=ollama_llm,
@@ -421,7 +421,7 @@ class TaskGroups:
   def OnlineSearchTask(self):
     self.online_search = Task(
       description=f"""Searching online about the user requested information gathering request about: '{self.topic}'. It can be used as well to search more information about reports that you have red and to enrich your report with external internet links and point of views. """,
-      expected_output="A markdown report on your answer about the user request after having made some search online abou it. the report need to be rich with a professional tone. The report purpose is to have insights for a board manager meeting, therefore, do not invent any fake information, it has to be grounded with referrals of where you foudn the information. Make sure that the report is having titles, paragraphs, links and answer to the question about user topic ('{self.topic}'). Output a report using markdown at '{self.search_report_dir}/{self.output_file_online_search}'",
+      expected_output="A markdown report on your answer about the user request after having made some search online about it. the report needs to be rich with a professional tone. The report purpose is to have insights for a board manager meeting, therefore, do not invent any fake information, it has to be grounded with referrals of where you found the information. Make sure that the report is having titles, paragraphs, links and answer to the question about user topic ('{self.topic}'). Output a report using markdown at '{self.search_report_dir}/{self.output_file_online_search}'",
       agent=AgentTeam(topic=self.topic, retrieved_answer=self.retrieved_answer).OnlineSearcher(),
       async_execution=False,
       output_file=f"{self.search_report_dir}/{self.output_file_online_search}"
@@ -454,7 +454,7 @@ class TaskGroups:
   def ProduceReportTask(self):
     self.produce_report = Task(
       description=f"""Produces a final report based on the report made by your collegues and gathered and formatted by 'Search Report Judge and Enhancer' about the user topic: '{self.topic}'.""",
-      expected_output=f"Produce a very detailed and professional report using markdown at '{self.final_report_dir}/{self.output_file_final_report}'. The report is for the board management to have pertinent insight on thesubject so it should answer in a professional and realistic way. It should be SMART. The report shoudl have, title and subtitles, paragraphs, 5 Q&A, answer to topic: '{self.topic}', pertinent view section to provide a new view on the topic, warning section to have like a contengency plan for the topic and anytthing else that you judge that  should be added to the report in order to be ready for a meeting. As you use markdown, you can add links, bullet points to make it nice to read as well.",
+      expected_output=f"Produce a very detailed and professional report using markdown at '{self.final_report_dir}/{self.output_file_final_report}'. The report is for the board management to have pertinent insight on thesubject so it should answer in a professional and realistic way. It should be SMART. The report should have, title and subtitles, paragraphs with titles to explain the different other reports explanations and conclusions, 5 Q&A about the {self.topic}, answer to topic: '{self.topic}', pertinent view section to provide a new view on the topic, warning section to have like a contengency plan for the topic and anything else that you judge that should be added to the report in order to be ready for a meeting. As you use markdown, you can add links, bullet points to make it nicely formatted to read as well. Do not make a short report but a very detailed one.",
       agent=AgentTeam(topic=self.topic, retrieved_answer=self.retrieved_answer).ReportCreator(),
       async_execution=False,
       output_file=f"{self.final_report_dir}/{self.output_file_final_report}" 
@@ -690,7 +690,7 @@ def ask_question_get_agent_team_make_report(file_name):
             st.text(f"Working hard for you....Please be patient\n{stdout}")
           if stderr:
             st.text(f"Errors/Warnings:\n{stderr}")
-  return f""
+  return "Job Done"
 
 
 #### 
